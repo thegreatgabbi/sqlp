@@ -82,6 +82,7 @@ WHERE staff.ReportsTo = supervisor.EmployeeID
 
 -- Question 24
 /* Retrieve the five highest ranking discounted product. "Discounted Product" indicates products with the total largest discount (in dollars) given to customers. */
+
 SELECT TOP 5 p.ProductName, SUM(ROUND((od.UnitPrice * od.Quantity * od.Discount), 2)) as TotalDiscount
 FROM Products p, [Order Details] od
 WHERE p.ProductID = od.ProductID
@@ -137,19 +138,20 @@ HAVING sum(od.Quantity * od.UnitPrice) > 10000
 
 -- Question 31
 /* List all the orders that exceed $10000 value per order. Your list should include order number and customer id. */
-
-SELECT o.OrderID, o.CustomerID, (od.Quantity * od.UnitPrice) AS Amount
-FROM [Order Details] od, Orders o
-WHERE o.OrderId = od.OrderId
-AND od.Quantity * od.UnitPrice > 10000
+SELECT o.OrderID, o.CustomerID, sum(od.Quantity * od.UnitPrice) AS Amount
+FROM Orders o, [Order Details] od
+WHERE o.OrderID = od.OrderID
+GROUP BY o.OrderID, o.CustomerID
+HAVING sum(od.Quantity * od.UnitPrice) > 10000
 
 -- Question 32
 /* List all the orders that exceed $10000 value per order. Your list should include order number and customer id and customer name. */
-SELECT o.OrderID, c.CompanyName, (od.Quantity * od.UnitPrice) AS Amount
-FROM [Order Details] od, Orders o, Customers c
-WHERE o.OrderId = od.OrderId
-AND o.CustomerID = c.CustomerId
-AND od.Quantity * od.UnitPrice > 10000
+SELECT o.OrderID, c.CompanyName, sum(od.Quantity * od.UnitPrice) AS Amount
+FROM Orders o, [Order Details] od, Customers c
+WHERE o.OrderID = od.OrderID
+AND o.CustomerID = c.CustomerID
+GROUP BY o.OrderID, c.CompanyName
+HAVING sum(od.Quantity * od.UnitPrice) > 10000
 
 -- Question 33
 /* List the total orders made by each customer. Your list should have customer id and Amount (Quantity * Price) for each customer. */
@@ -165,13 +167,12 @@ SELECT FORMAT((
 		FROM Orders o, [Order Details] od
 		WHERE o.OrderID = od.OrderID)
 		/ 
-		(SELECT COUNT(*)
-		FROM Customers
+		(SELECT COUNT(DISTINCT CustomerID)
+		FROM Orders
 	)), 'C')
 
 -- Question 35
 /* List all customers (Customer id, Customer name) who have placed orders more than the average business that a northwind customer provides. */
-
 SELECT o.CustomerID, c.CompanyName, FORMAT(SUM(od.Quantity * od.UnitPrice), 'C') as Amount
 FROM Orders o, [Order Details] od, Customers c
 WHERE o.OrderID = od.OrderID
